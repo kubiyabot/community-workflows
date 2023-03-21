@@ -5,7 +5,7 @@ name: "kubernetes_job_with_output"
   - id: k8s_namespaces
     type: action
     action:
-      runner: demo
+      runner: ${default.runner}
       store: kubernetes
       name: "list_namespace"
       parameters: {}
@@ -66,7 +66,7 @@ name: "kubernetes_job_with_output"
         - id: k8s_job
           type: action
           action:
-            runner: demo
+            runner: ${default.runner}
             store: kubernetes
             name: "create_namespaced_job"
             parameters:
@@ -85,7 +85,7 @@ name: "kubernetes_job_with_output"
         - id: job_output
           type: action
           action:
-            runner: demo
+            runner: ${default.runner}
             store: kubernetes
             name: "get_namespaced_job_logs"
             parameters:
