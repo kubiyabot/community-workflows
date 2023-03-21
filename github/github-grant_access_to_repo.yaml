@@ -1,0 +1,52 @@
+author: "ram.matzkovsky@kubiya.ai"
+version: 3
+type: "conversation"
+name: "GitHub-Grant Access To Repo"
+steps:
+  - type: "action"
+    id: "get_org_repos_names"
+    action:
+      name: "get_org_repos_names"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters: {}
+  - type: "input"
+    value_type: "enum"
+    id: "select_repo"
+    prompt: "Select which repo you would like to give access to"
+    possible_values: "${get_org_repos_names}"
+  - type: "input"
+    value_type: "text"
+    id: "github_user_name"
+    prompt: "Please enter the GitHub user name:"
+  - type: "input"
+    value_type: "boolean"
+    id: "validation"
+    label: ""
+    prompt: "Are you sure you would like to add ${github_user_name} to ${select_repo} repo ?"
+  - id: "is_add_user"
+    label: ""
+    type: "condition"
+    if:
+      arg: "${validation}"
+      arg2: "true"
+      is: "equals"
+      else: []
+      then:
+        - id: "grant_access_to_repo"
+          label: ""
+          type: "action"
+          action:
+            name: "grant_access_to_repo"
+            store: "action-store-github"
+            runner: ${default.runner}
+            parameters:
+              repo_name: "${select_repo}"
+              named_user: "${github_user_name}"
+        - id: "output"
+          label: ""
+          type: "message"
+          prompt: "${grant_access_to_repo}"
+  - type: "exit"
+    id: "exit"
+    label: ""

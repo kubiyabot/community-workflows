@@ -1,0 +1,84 @@
+author: "ram.matzkovsky@kubiya.ai"
+version: 3
+type: "conversation"
+name: "GitHub-Pull logs from workflow run"
+steps:
+  - type: "action"
+    id: "get_org_repos_names_with_workflows"
+    label: ""
+    action:
+      name: "get_org_repos_names_with_workflows"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters: {}
+  - type: "condition"
+    id: "is_workflows"
+    label: ""
+    if:
+      arg: "${get_org_repos_names_with_workflows}"
+      is: "equals"
+      arg2: "false"
+      then:
+        - type: "message"
+          id: "no_workflows"
+          label: ""
+          prompt: "Your organization repositories don't have any workflows to pull logs from."
+        - type: "exit"
+          id: "exit_no_workflows"
+          label: ""
+      else: []
+  - type: "input"
+    value_type: "enum"
+    id: "select_repo"
+    prompt: "Please select which repo you would like to examin its workflow :"
+    possible_values: "${get_org_repos_names_with_workflows}"
+  - type: "action"
+    id: "list_repo_workflows"
+    action:
+      name: "list_workflows"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+  - type: "input"
+    value_type: "enum"
+    id: "select_workflow"
+    prompt: "Please select workflow :"
+    possible_values: "${list_repo_workflows}"
+  - type: "action"
+    id: "last_workflow_runs"
+    action:
+      name: "last_workflow_runs"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+        workflow_id: "${select_workflow}"
+  - type: "json_message"
+    id: "work_flows_runs"
+    label: ""
+    prompt: "${last_workflow_runs}"
+  - type: "jq"
+    id: "parse_last_workflow_runs"
+    label: ""
+    jq: ".last_workflow_runs[].run_id | tostring"
+  - type: "input"
+    value_type: "enum"
+    id: "select_run_id_to_pull_logs_from"
+    label: ""
+    prompt: "select run id to get logs from"
+    possible_values: "${parse_last_workflow_runs}"
+  - type: "action"
+    id: "get_logs_gh_action_workflow_run"
+    action:
+      name: "get_logs_gh_action_workflow_run"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+        run_id: "${select_run_id_to_pull_logs_from}"
+  - type: "message"
+    id: "output"
+    prompt: "*Click the following url to download the logs :*\n${get_logs_gh_action_workflow_run}"
+  - type: "exit"
+    id: "exit"

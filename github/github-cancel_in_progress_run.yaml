@@ -1,0 +1,83 @@
+author: "ram.matzkovsky@kubiya.ai"
+version: 3
+type: "conversation"
+name: "GitHub-Cancel In Progress Run"
+steps:
+  - type: "action"
+    id: "get_org_repos"
+    action:
+      name: "get_org_repos_names_with_workflows_in_progress"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters: {}
+  - type: "condition"
+    id: "is_workflows_in_progress"
+    label: ""
+    if:
+      arg: "${get_org_repos}"
+      is: "equals"
+      arg2: "False"
+      then:
+        - type: "message"
+          id: "no_repos_with_workflows_in_progress"
+          label: ""
+          prompt: "Your organization repositories don't have any running workflows at the moment."
+        - type: "exit"
+          id: "exit_no_workflows"
+          label: ""
+      else: []
+  - type: "input"
+    value_type: "enum"
+    id: "select_repo"
+    label: ""
+    prompt: "Select which repo you would like to look for a workflow:"
+    possible_values: "${get_org_repos}"
+  - type: "action"
+    id: "list_repo_workflows"
+    action:
+      name: "list_workflows_in_progress"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+  - type: "input"
+    value_type: "enum"
+    id: "select_workflow"
+    prompt: "Please select workflow"
+    possible_values: "${list_repo_workflows}"
+  - type: "action"
+    id: "in_progress_workflow_run_details"
+    action:
+      name: "in_progress_workflow_runs"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+        workflow_name: "${select_workflow}"
+  - type: "json_message"
+    id: "in_progress_workflows_runs"
+    label: ""
+    prompt: "${in_progress_workflow_run_details}"
+  - type: "jq"
+    id: "parse_in_progress_workflows_runs"
+    label: ""
+    jq: ".in_progress_workflow_run_details[].run_id  |tostring"
+  - type: "input"
+    value_type: "enum"
+    id: "select_which_run_to_cancel"
+    prompt: "select which run to cancel"
+    possible_values: "${parse_in_progress_workflows_runs}"
+  - type: "action"
+    id: "cancel_gh_action_workflow_run"
+    action:
+      name: "cancel_gh_action_workflow_run"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+        run_id: "${select_which_run_to_cancel}"
+  - type: "message"
+    id: "output"
+    prompt: "${cancel_gh_action_workflow_run}"
+  - type: "exit"
+    id: "exit"

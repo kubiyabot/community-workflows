@@ -1,0 +1,74 @@
+author: "ram.matzkovsky@kubiya.ai"
+version: 3
+type: "conversation"
+name: "GitHub-Get Open Pull Requests"
+steps:
+  - type: "input"
+    value_type: "boolean"
+    id: "selected_repositories"
+    prompt: "Would you like to view pull requests from all repositories in your organization ?"
+  - type: "condition"
+    id: "is_all_repos"
+    if:
+      arg: "${selected_repositories}"
+      is: "equals"
+      arg2: "true"
+      then:
+        - type: "action"
+          id: "get_all_org_repos_open_prs"
+          label: ""
+          action:
+            name: "get_all_org_repos_open_prs"
+            store: "action-store-github"
+            runner: ${default.runner}
+            parameters: {}
+        - type: "jq"
+          id: "jq_all_org_repo_prs"
+          label: ""
+          jq: ".get_all_org_repos_open_prs"
+        - type: "message"
+          id: "headline_output_all_org_repos"
+          label: ""
+          prompt: " *Viewing all org repos open pull requests:*"
+        - id: "json_output_all_org_repo_prs"
+          label: ""
+          type: "json_message"
+          prompt: "${jq_all_org_repo_prs}"
+      else:
+        - type: "action"
+          id: "get_org_repos_names"
+          label: ""
+          action:
+            name: "get_org_repos_names"
+            store: "action-store-github"
+            runner: ${default.runner}
+            parameters: {}
+        - type: "input"
+          value_type: "enum"
+          id: "select_repository"
+          prompt: "For which repository would you like to see the open pull requests ?"
+          possible_values: "${get_org_repos_names}"
+        - type: "action"
+          id: "get_open_prs"
+          label: ""
+          action:
+            name: "get_open_prs"
+            store: "action-store-github"
+            runner: ${default.runner}
+            parameters:
+              repo_name: "${select_repository}"
+        - type: "jq"
+          id: "jq_repo_open_prs"
+          label: ""
+          jq: ".get_open_prs"
+        - id: "headline_output_select_repo"
+          label: ""
+          type: "message"
+          prompt: " *Viewing ${select_repository} open pull requests:*"
+        - id: "json_out"
+          label: ""
+          type: "json_message"
+          prompt: "${jq_repo_open_prs}"
+  - type: "exit"
+    id: "exit"
+    label: ""

@@ -1,0 +1,48 @@
+author: "ram.matzkovsky@kubiya.ai"
+version: 3
+type: "conversation"
+name: "GitHub-Remove Access From a repo"
+steps:
+  - type: "action"
+    id: "get_org_repos_names"
+    action:
+      name: "get_org_repos_names"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters: {}
+  - type: "input"
+    value_type: "enum"
+    id: "select_repo"
+    prompt: "Select which repo you would like to remove access from"
+    possible_values: "${get_org_repos_names}"
+  - type: "input"
+    value_type: "text"
+    id: "github_user_name"
+    prompt: "Please enter the github user name you would like to remove :"
+  - type: "action"
+    id: "remove_access_from_repo"
+    action:
+      name: "remove_access_from_repo"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+        named_user: "${github_user_name}"
+  - type: "message"
+    id: "output"
+    prompt: "${remove_access_from_repo}"
+  - id: "get_repo_collaborators"
+    label: ""
+    type: "action"
+    action:
+      name: "get_repo_collaborators"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+  - id: "remaining_collabs"
+    label: ""
+    type: "message"
+    prompt: "Here are the remaining collaborators:```${get_repo_collaborators}```"
+  - type: "exit"
+    id: "exit"

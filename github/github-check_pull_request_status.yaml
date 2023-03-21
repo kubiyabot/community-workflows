@@ -1,0 +1,35 @@
+author: "ram.matzkovsky@kubiya.ai"
+version: 3
+type: "conversation"
+name: "GitHub-Check Pull Request Status"
+steps:
+  - type: "action"
+    id: "get_pull_requests_ref"
+    label: ""
+    action:
+      name: "get_pr_ref"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters: {}
+  - type: "input"
+    value_type: "enum"
+    id: "select_pr"
+    label: ""
+    prompt: "Please select which pull request to View"
+    possible_values: "${get_pull_requests_ref}"
+  - type: "action"
+    id: "pr_details_from_ref"
+    label: ""
+    action:
+      name: "pr_details_from_ref"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        ref: "${select_pr}"
+  - type: "json_message"
+    id: "output"
+    label: ""
+    prompt: "${pr_details_from_ref}"
+  - type: "exit"
+    id: "exit"
+    label: ""

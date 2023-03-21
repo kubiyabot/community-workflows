@@ -1,0 +1,83 @@
+author: "ram.matzkovsky@kubiya.ai"
+version: 3
+type: "conversation"
+name: "GitHub-Restart Workflow run"
+steps:
+  - type: "action"
+    id: "get_org_repos_names"
+    action:
+      name: "get_org_repos_names_with_workflows"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters: {}
+  - id: "is_repo_with_workflow_exist"
+    label: ""
+    type: "condition"
+    if:
+      arg: "${get_org_repos_names[0]}"
+      arg2: "False"
+      is: "equals"
+      else: []
+      then:
+        - id: "no_repos_with_workflows"
+          label: ""
+          type: "message"
+          prompt: "Your organization repositories don't have any workflows to restart"
+        - id: "exit_no_workflows"
+          label: ""
+          type: "exit"
+  - type: "input"
+    value_type: "enum"
+    id: "select_repo"
+    prompt: "Select which repo you would like to look for a workflow"
+    possible_values: "${get_org_repos_names}"
+  - type: "action"
+    id: "list_repo_workflows"
+    action:
+      name: "list_workflows"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+  - type: "input"
+    value_type: "enum"
+    id: "select_workflow"
+    prompt: "Please select workflow to run"
+    possible_values: "${list_repo_workflows}"
+  - type: "action"
+    id: "last_workflow_runs"
+    action:
+      name: "last_workflow_runs"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+        workflow_id: "${select_workflow}"
+  - type: "json_message"
+    id: "work_flows_runs"
+    label: ""
+    prompt: "${last_workflow_runs}"
+  - type: "jq"
+    id: "parse_last_workflow_runs"
+    label: ""
+    jq: ".last_workflow_runs[].run_id | tostring"
+  - type: "input"
+    value_type: "enum"
+    id: "select_run_id_to_re_run"
+    label: ""
+    prompt: "select run id to re run"
+    possible_values: "${parse_last_workflow_runs}"
+  - type: "action"
+    id: "re_run_gh_action_workflow_run"
+    action:
+      name: "re_run_gh_action_workflow_run"
+      store: "action-store-github"
+      runner: ${default.runner}
+      parameters:
+        repo_name: "${select_repo}"
+        run_id: "${select_run_id_to_re_run}"
+  - type: "message"
+    id: "output"
+    prompt: "Workflow run restarted"
+  - type: "exit"
+    id: "exit"
