@@ -1,14 +1,11 @@
 version: 3
 type: conversation
 name: "kubernetes_deployment_rollout"
-# kubiya action execute -a create_namespaced_job -s kubernetes -r demo -j 
-#'{"name": "example-job","app_label": "test-app", "command": "uptime", "container_name": "app-test", "env_vars": {"key": "value"}, "image": "nginx:latest", "job_name": "kubiya-fn-runner"}'
 steps:
   # Get the list of namespaces in the cluster from the kubernetes store
   - id: k8s_namespaces
     type: action
     action:
-      runner: demo
       store: kubernetes
       name: "list_namespace"
       parameters: {}
@@ -20,7 +17,6 @@ steps:
   - id: k8s_deployments
     type: action
     action:
-      runner: demo
       store: kubernetes
       name: "list_deployment"
       parameters:
@@ -48,7 +44,6 @@ steps:
         - id: rollout
           type: action
           action:
-            runner: demo
             store: kubernetes
             name: "rollout_restart_deployment"
             parameters:
