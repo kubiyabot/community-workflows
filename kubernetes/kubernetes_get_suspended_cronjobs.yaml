@@ -1,4 +1,3 @@
-author: "shaked@kubiya.ai"
 version: 3
 type: "conversation"
 name: "kubernetes_get_suspended_cronjobs"
@@ -22,7 +21,7 @@ steps:
           action:
             name: "list_suspended_cronjobs"
             store: "kubernetes"
-            runner: "demo"
+            runner: ${default.runner}
             parameters: {}
         - type: "condition"
           id: "check_if_no_jobs_found_in_all_namespaces"
@@ -44,7 +43,7 @@ steps:
           action:
             name: "list_namespace"
             store: "kubernetes"
-            runner: "demo"
+            runner: ${default.runner}
             parameters: {}
         - type: "input"
           value_type: "enum"
@@ -56,7 +55,7 @@ steps:
           action:
             name: "list_suspended_cronjobs_for_namespace"
             store: "kubernetes"
-            runner: "demo"
+            runner: ${default.runner}
             parameters:
               name: "${namespace}"
         - type: "condition"
@@ -73,4 +72,3 @@ steps:
               - type: "json_message"
                 id: "print_suspended_jobs_in_namespace"
                 prompt: "${cron_jobs_in_namespace}"
-
