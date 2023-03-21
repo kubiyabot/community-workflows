@@ -6,6 +6,7 @@ steps:
   - id: k8s_namespaces
     type: action
     action:
+      runner: "${default.runner}"
       store: kubernetes
       name: "list_namespace"
       parameters: {}
@@ -19,6 +20,7 @@ steps:
     action:
       store: kubernetes
       name: "list_deployment"
+      runner: "${default.runner}"
       parameters:
         namespace: ${selected_namespace}
   - id: selected_deployment
@@ -46,6 +48,7 @@ steps:
           action:
             store: kubernetes
             name: "rollout_restart_deployment"
+            runner: "${default.runner}"
             parameters:
               deployment_name: ${selected_deployment}
               namespace: ${selected_namespace}
