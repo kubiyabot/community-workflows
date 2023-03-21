@@ -1,0 +1,67 @@
+version: 3
+type: conversation
+name: "kubernetes_deployment_rollout"
+# kubiya action execute -a create_namespaced_job -s kubernetes -r demo -j 
+#'{"name": "example-job","app_label": "test-app", "command": "uptime", "container_name": "app-test", "env_vars": {"key": "value"}, "image": "nginx:latest", "job_name": "kubiya-fn-runner"}'
+steps:
+  # Get the list of namespaces in the cluster from the kubernetes store
+  - id: k8s_namespaces
+    type: action
+    action:
+      runner: demo
+      store: kubernetes
+      name: "list_namespace"
+      parameters: {}
+  - id: selected_namespace
+    type: input
+    value_type: enum
+    possible_values: ${k8s_namespaces}
+    prompt: "Select the namespace of the deployment you want to rollout"
+  - id: k8s_deployments
+    type: action
+    action:
+      runner: demo
+      store: kubernetes
+      name: "list_deployment"
+      parameters:
+        namespace: ${selected_namespace}
+  - id: selected_deployment
+    type: input
+    value_type: enum
+    possible_values: ${k8s_deployments}
+    prompt: "Select the deployment you want to rollout"
+  - id: validate
+    type: input
+    value_type: boolean
+    prompt: '⚠️ Deployment *${selected_deployment}* will be rolled out in namespace *${selected_namespace}*. Do you want to continue?'
+  - id: condition
+    type: condition
+    if:
+      arg: ${validate}
+      is: equals
+      arg2: "true"
+      then:
+        - id: notify
+          type: message
+          prompt: |
+            🔄 Rolling out deployment *${selected_deployment}* in namespace *${selected_namespace}*...
+        - id: rollout
+          type: action
+          action:
+            runner: demo
+            store: kubernetes
+            name: "rollout_restart_deployment"
+            parameters:
+              deployment_name: ${selected_deployment}
+              namespace: ${selected_namespace}
+        - id: print_job
+          type: message
+          prompt: |
+            ✅ *Done!*
+            Deployment *${selected_deployment}* rolled out in namespace *${selected_namespace}*!
+      else:
+        - id: cancel
+          type: message
+          prompt: |
+            ❌ *Cancelled!*
+            Job *${job_name}* creation cancelled!
