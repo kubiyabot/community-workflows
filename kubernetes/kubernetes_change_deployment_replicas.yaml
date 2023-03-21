@@ -7,7 +7,7 @@ steps:
     action:
       name: "list_namespace"
       store: "kubernetes"
-      runner: "demo"
+      runner: ${default.runner}
       parameters: {}
   - type: "input"
     value_type: "enum"
@@ -19,7 +19,7 @@ steps:
     action:
       name: "list_deployment"
       store: "kubernetes"
-      runner: "demo"
+      runner: ${default.runner}
       parameters:
         deployment_name: ""
         namespace: "${selected_namespace}"
@@ -34,7 +34,7 @@ steps:
     action:
       name: "get_deployment_replicas"
       store: "kubernetes"
-      runner: "demo"
+      runner: ${default.runner}
       parameters:
         deployment_name: "${selected_deployment}"
         namespace: "${selected_namespace}"
@@ -65,7 +65,7 @@ steps:
           action:
             name: "set_deployment_replicas"
             store: "kubernetes"
-            runner: "demo"
+            runner: ${default.runner}
             parameters:
               deployment_name: "${selected_deployment}"
               namespace: "${selected_namespace}"
@@ -77,4 +77,3 @@ steps:
         - type: "message"
           id: "cancel"
           prompt: "❌ *Cancelled!*\n"
-
